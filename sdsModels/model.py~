@@ -1,0 +1,71 @@
+from abc import ABCMeta, abstractmethod, abstractproperty
+from testResults import TestResults
+import sklearn.cross_validation as cv
+import numpy as np
+
+class Model():
+	__metaclass__=ABCMeta
+
+	params = {}
+	
+	def __init__(self, params):
+		self.params = params
+
+	@abstractproperty
+	def name(self):
+		pass
+		
+	@abstractmethod
+	def _train(self, data):
+		''' return a trained model '''
+		pass
+		
+	def _test(self, model, testData, resultObj):
+		
+		# restrict test data to principal component features
+		features = self.params['features']
+		test = np.array(testData[features])
+
+		# predict a dialog sequence using test data   
+		# sklearn counts from 0 so add 1...
+		pred = [int(r)+1 for r in list(model.predict(test))]
+
+		# extract true ratings from test data
+		true = [int(rating) for rating in testData['rating'].values.tolist()]
+
+		resultObj.compare(true,pred)
+		    
+		return resultObj	
+		
+	def loocv(self, data):
+		mask = cv.LeaveOneLabelOut(data['label'].values)
+		results = TestResults(self.name)
+
+		for trainMask,testMask in mask:
+		   trainingData = data.loc[trainMask]
+		   model = self._train(trainingData)
+		
+		   testData = data.loc[testMask]
+		   # leave p labels out
+		   for label,testGroup in testData.groupby("label"): 
+		      results = self._test(model, testGroup, results)
+
+		return results
+		
+	def kfoldscv(self, data, folds):
+		results = TestResults(self.name)
+		labels = list(np.unique(data['label'].values))
+		
+		for tr,te in cv.KFold(len(labels), n_folds=folds):
+			trainD = data[data['label'].isin([labels[i] for i in tr])]
+			testD = data[data['label'].isin([labels[i] for i in te])]
+
+			model = self._train(trainD)
+
+			for label,testGroup in testD.groupby("label"):
+				results = self._test(model, testGroup, results)
+				
+		return results
+		
+	def setFeatures(self, features):
+		self.params['features'] = features

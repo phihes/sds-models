@@ -1,0 +1,18 @@
+import sdsModels as sdsm
+import pandas as pd
+
+d_simple_1 = [
+	(1, 1, 1),
+	(1, 1, 1),
+	(2, 2, 2),
+	(2, 2, 2),
+	(3, 3, 3),
+	(3, 3, 3)
+]
+
+data = pd.DataFrame(d_simple_1, columns = ["label","rating","feature1"])
+exp = sdsm.Experiment(data=data)
+exp.addModel(sdsm.Hmm({'states': [1,2,3]}))
+exp.generateResults(["feature1"], cvMethod="loo")
+
+exp.printResults(['model', 'accuracy', 'r2'])

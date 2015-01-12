@@ -1,0 +1,23 @@
+import numpy as np
+from sklearn.mixture import GMM
+
+class Gmm(Model):
+
+	''' Gaussian mixture model'''
+	
+	name = "GMM"
+	
+	def _train(self, data):
+		# parameters
+		features = self.params['features']
+		num_mixc = self.params['num_mixc']
+		cov_type = self.params['cov_type']
+	
+		# prepare data shape
+		d = np.array(zip(*[data[f].values for f in features]))
+
+		# choose high number of EM-iterations to get constant results
+		gmm = GMM(num_mixc,cov_type,n_iter=300)
+		gmm.fit(d)
+
+		return gmm	
