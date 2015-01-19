@@ -1,3 +1,9 @@
+"""
+Determine R^2 score of hidden Markov model and ordinary least squares using clustered features. Parameters are
+different feature-sets (looks at all combinations of given features) and ks for k-means clustering.
+Clustering is done per each feature in feature-set. Shows results in a scatter-plot grid.
+"""
+
 import pandas as pd
 import itertools
 
@@ -7,7 +13,7 @@ import matplotlib.pyplot as plt
 import sdsModels as sdsm
 
 
-data = pd.read_csv('complete_april_2014_ratings-latest.csv')
+data = pd.read_csv('../data/complete_april_2014_ratings-latest.csv')
 data = data[pd.notnull(data['rating'])]	
 
 values = []
@@ -18,7 +24,7 @@ for features in itertools.combinations(all_features, num_features):
     f = list(features)
     print(f)
 
-    # k-means clustering for k=2..4
+    # k-means clustering for k=3..8
     for k in xrange(3, 9):
         print("\tk=" + str(k))
         # cluster features individually

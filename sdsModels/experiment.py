@@ -28,7 +28,7 @@ class Experiment:
                 print "running leave-one-out cross-validation"
                 result = model.loocv(self.getLabeledData(features))
             else:
-                print "running " + str(10) + "-fold cross-validation"
+                print "running " + str(k) + "-fold cross-validation"
                 result = model.kfoldscv(self.getLabeledData(features), k)
             self.results.append(result)
 
