@@ -1,8 +1,7 @@
-import sdsModels as sdsm
-import seaborn as sns
-import matplotlib.pyplot as plt
 import pandas as pd
-import itertools
+
+import sdsModels as sdsm
+
 
 data = pd.read_csv('complete_april_2014.csv')
 data['clustered-words-user'] = sdsm.cluster(data, ['words-user'], 4)

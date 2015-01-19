@@ -13,7 +13,7 @@ def dfToSequences(data, params, rated=False):
 
         features = map(None, *vals)
 
-        if (rated):
+        if rated:
             ratings = group['rating'].values.tolist()
             features = map(None, *[features, ratings])
 
@@ -22,24 +22,24 @@ def dfToSequences(data, params, rated=False):
     return seqs
 
 
-def squareDict(keyList, fill=0):
-    return rectDict(keyList, keyList, fill)
+def squareDict(keylist, fill=0):
+    return rectDict(keylist, keylist, fill)
 
 
-def rectDict(keyListA, keyListB, fill=0):
-    return {a: {b: fill for b in keyListB} for a in keyListA}
+def rectDict(keylista, keylistb, fill=0):
+    return {a: {b: fill for b in keylistb} for a in keylista}
 
 
 def squareDicts(num, keyList, fill=0):
     return [squareDict(keyList, fill) for _ in range(num)]
 
 
-def rectDicts(num, keyListA, keyListB, fill=0):
-    return [rectDict(keyListA, keyListB, fill) for _ in range(num)]
+def rectDicts(num, keylista, keylistb, fill=0):
+    return [rectDict(keylista, keylistb, fill) for _ in range(num)]
 
 
-def dicts(num, keyList, fill=0):
-    return [{a: fill for a in keyList} for _ in range(num)]
+def dicts(num, keylist, fill=0):
+    return [{a: fill for a in keylist} for _ in range(num)]
 
 
 def matrix(lists):

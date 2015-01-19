@@ -1,5 +1,4 @@
 import sdsModels as sdsm
-import pandas as pd
 
 exp = sdsm.Experiment(pathToData='complete_april_2014_ratings-latest.csv')
 #exp2 = sdsm.Experiment(pathToData='complete_april_2014.csv')

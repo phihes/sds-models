@@ -23,11 +23,12 @@ class TestResults:
     _pred = list()
     _name = False
 
-    def __init__(self, name, indicators=False):
+    def __init__(self, name, indicators=False, verbose=False):
         self._name = name
         self._true = list()
         self._pred = list()
         self._results = dict()
+        self.verbose = verbose
         if (indicators):
             self._indicators = indicators
         for i in self._indicators.keys():
@@ -37,6 +38,9 @@ class TestResults:
     def compare(self, true, pred):
         """ Add a series of true and predicted
         """
+        if self.verbose:
+            print "[true]\t" + str(true)
+            print "[pred]\t" + str(pred)
         self._true.append(true)
         self._pred.append(pred)
         for ind in self._indicators.keys():

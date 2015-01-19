@@ -37,7 +37,8 @@ class Counter():
 
     def checkState(self, state):
         if not (isinstance(state, bool) or state in self.stateAlph):
-            raise Exception("Encountered unknown state in data: " + str(state))
+            raise Exception("Encountered unknown state in data: " + str(state)
+                            + ", while state alphabet is " + str(self.stateAlph))
 
     def addEmissionCombination(self, combination):
         self.emissionAlph.append(combination)
@@ -72,7 +73,7 @@ class MatrixCounterNoEmissions(Counter):
         if position == 0:
             self.init[current] += 1
         # transitions
-        if (next is not False):
+        if next is not False:
             self.trans_abs[current] += 1
             self.trans_ind[current][next] += 1
 
@@ -179,7 +180,8 @@ class DictCounter(MatrixCounter):
         return pr_emissions
 
 
-class NltkCounter(Counter):
+class NltkCounter(DictCounter):
+    """
     roundnum = 100000000.0
 
     def __init__(self, stateAlph, emissionAlph, states):
@@ -193,11 +195,16 @@ class NltkCounter(Counter):
         self.checkState(current)
         self.checkState(next)
         self.emissions[current].inc(emission)
-        if (position == 0): self.prior.inc(current)
-        if (next is not False): self.transitions[current].inc(next)
+        if position == 0:
+            self.prior.inc(current)
+        if next is not False:
+            self.transitions[current].inc(next)
+
 
     def getEmissionProb(self, state, emission):
         return float(self.emissions[state][emission]) / self.roundnum
+
+
 
     def getInitialProb(self):
         return nltk.LaplaceProbDist(self.prior)
@@ -208,16 +215,44 @@ class NltkCounter(Counter):
     def getEmissionProb(self):
         return nltk.ConditionalProbDist(self.emissions, nltk.LaplaceProbDist)
 
+     """
+
+    def getInitialProb(self):
+        return nltk.DictionaryProbDist(prob_dict={
+            state: float(self.init[state]) / float(len(self.states))
+            for state in self.init
+        })
+
+    def getTransitionProb(self):
+        trans = dict()
+        for state in self.stateAlph:
+            state_trans = dict()
+            for otherState in self.stateAlph:
+                if self.trans_abs[state] > 0:
+                    state_trans[otherState] = (
+                        float(self.trans_ind[state][otherState]) /
+                        float(self.trans_abs[state])
+                    )
+                else:
+                    state_trans[otherState] = 0
+            trans[state] = nltk.DictionaryProbDist(prob_dict=state_trans)
+        return nltk.DictionaryConditionalProbDist(trans)
+
+    def getEmissionProb(self):
+        emissions = dict()
+        for state in self.stateAlph:
+            state_emissions = dict()
+            for emission in self.emissionAlph:
+                if self.states_count[state] > 0:
+                    p = float(self.emissions_count[state][emission]) / float(self.states_count[state])
+                else:
+                    p = 0
+                state_emissions[emission] = p
+            emissions[state] = nltk.DictionaryProbDist(prob_dict=state_emissions)
+        return nltk.DictionaryConditionalProbDist(emissions)
+
     def getCombinedEmissionProb(self):
-        allEmissions = nltk.ConditionalFreqDist()
+        allEmissions = dict()
         for state in self.emissionPs.keys():
-            print state
-            for combination in self.emissionPs[state].keys():
-                print combination
-                count = round(self.emissionPs[state][combination] * self.roundnum)
-                print count
-                allEmissions[state].inc(combination, count)
-
-        print allEmissions
-
-        return nltk.ConditionalProbDist(allEmissions, nltk.LaplaceProbDist)
+            allEmissions[state] = nltk.DictionaryProbDist(prob_dict=self.emissionPs[state])
+        return nltk.DictionaryConditionalProbDist(allEmissions)

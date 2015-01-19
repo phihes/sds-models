@@ -7,6 +7,7 @@ class Experiment:
     results = []
 
     def __init__(self, pathToData=None, data=None):
+        self.clear()
         if isinstance(pathToData, basestring):
             self.data = pd.read_csv(pathToData)
             # clear of unrated turns
@@ -23,9 +24,11 @@ class Experiment:
         self.results = []
         for model in self.models:
             model.setFeatures(features)
-            if (cvMethod == 'loo'):
+            if cvMethod == 'loo':
+                print "running leave-one-out cross-validation"
                 result = model.loocv(self.getLabeledData(features))
             else:
+                print "running " + str(10) + "-fold cross-validation"
                 result = model.kfoldscv(self.getLabeledData(features), k)
             self.results.append(result)
 
@@ -52,7 +55,7 @@ class Experiment:
                 row.append(r[metric])
             values.append(row)
 
-        if (extraMetrics is None):
+        if extraMetrics is None:
             df = pd.DataFrame(values, columns=metrics)
         else:
             for i in xrange(0, len(values)):

@@ -8,7 +8,6 @@ import itertools
 import pandas as pd
 
 from testResults import TestResults
-
 from counters import *
 import utils as utils
 
@@ -19,8 +18,15 @@ class Model():
     params = {}
     isSklearn = True
 
-    def __init__(self, params):
+    def __init__(self, params, verbose=False):
         self.params = params
+        self.verbose = verbose
+
+    def printv(self, arg, title=None):
+        if self.verbose:
+            if title is not None:
+                print title
+            print arg
 
     @property
     def name(self):
@@ -60,13 +66,18 @@ class Model():
         cross validation steps.
         """
         mask = cv.LeaveOneLabelOut(data['label'].values)
-        results = TestResults(self.name)
+        results = TestResults(self.name, verbose=self.verbose)
 
         for trainMask, testMask in mask:
+
+            # training
             trainingData = data.loc[trainMask]
+            self.printv(trainingData, "training data:")
             model = self._train(trainingData)
 
+            # testing
             testData = data.loc[testMask]
+            self.printv(testData, "test data:")
             # leave p labels out
             for label, testGroup in testData.groupby("label"):
                 results = self._test(model, testGroup, results)
@@ -78,12 +89,14 @@ class Model():
         Returns a TestResults objects, where results are averages from the
         cross validation steps.
         """
-        results = TestResults(self.name)
+        results = TestResults(self.name, verbose=self.verbose)
         labels = list(np.unique(data['label'].values))
 
         for tr, te in cv.KFold(len(labels), n_folds=folds):
             trainD = data[data['label'].isin([labels[i] for i in tr])]
             testD = data[data['label'].isin([labels[i] for i in te])]
+            self.printv(trainD, "training data:")
+            self.printv(testD, "test data:")
 
             model = self._train(trainD)
 
@@ -226,15 +239,12 @@ class Hmm(Model):
             tagged = self.model.tag([tuple(o) for o in obs])
             return [val[1] for val in tagged]
 
-
     def _train(self, data):
         features = self.params['features']
         states = self.params['states']
 
         # calculate maximum-likelihood parameter estimates
         mle = Hmm.mle_multipleFeatures(NltkCounter, data, states, features)
-
-        print(mle)
 
         # create nltk HMM
         model = Hmm.NltkWrapper(states, mle)
@@ -283,7 +293,7 @@ class Hmm(Model):
     def mle_multipleFeatures(counterClass, data, stateAlphabet, features):
         """ Calculate maximum likelihood estimates of HMM parameters.
         Parameters are transition probabilites, emission probabilites and
-        initial state probabilites.
+        initial sta<te probabilites.
         This method allows specifing multiple features and combines multiple
         emission features assuming conditional independence:
         P(feat1=a & feat2=b|state) = P(feat1=a|state) * P(feat2=b|state)
@@ -308,7 +318,6 @@ class Hmm(Model):
         emissionAlphabet = list()
         for f in features:
             emissionAlphabet.append(pd.unique(data[f].values.ravel()))
-        print emissionAlphabet
 
         # calculate all emission combinations
         # and according probabilities per state

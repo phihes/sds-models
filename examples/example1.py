@@ -1,7 +1,10 @@
-import sdsModels as sdsm
+import pandas as pd
+
 import seaborn as sns
 import matplotlib.pyplot as plt
-import pandas as pd
+
+import sdsModels as sdsm
+
 
 exp = sdsm.Experiment(pathToData = 'complete_april_2014.csv')
 								
