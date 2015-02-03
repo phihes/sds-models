@@ -41,19 +41,23 @@ for num_pc in pc_range:
         exp.generateResults(
             features,
             cvMethod='kfolds',
-            k=2
+            k=3
         )
 
         for result in exp.results:
             r = result.getResults()
-            row = [r['model'], r['accuracy'], num_pc, num_mix]
+            row = [r['model'], float(r['r2']), float(r['accuracy']), num_pc, num_mix]
             values.append(row)
 
-df = pd.DataFrame(values, columns=['model', 'accuracy', 'components', 'mixtures'])
-print(df)
+pd.set_option('display.precision', 4)
+pd.set_option('display.width', 1024)
+pd.set_option('display.max_rows', 512)
+
+df = pd.DataFrame(values, columns=['model', 'r2', 'accuracy', 'components', 'mixtures'])
+print(df.sort(['r2'], ascending=False))
 
 grid = sns.FacetGrid(df, row="components", col="model", margin_titles=True)
-grid.map(plt.scatter, "mixtures", "accuracy")
+grid.map(plt.scatter, "mixtures", "r2")
 grid.fig.tight_layout(w_pad=1)
 
 plt.show()

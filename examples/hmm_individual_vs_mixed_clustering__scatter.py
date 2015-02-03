@@ -13,13 +13,13 @@ import matplotlib.pyplot as plt
 import sdsModels as sdsm
 
 
-data = pd.read_csv('../data/complete_april_2014_ratings-latest.csv')
+data = pd.read_csv('../data/complete_april_2014.csv')
 data = data[pd.notnull(data['rating'])]
 
 values = []
 all_features = ["asr-conf", "words-user", "barge-in", "SSA-ids"]
 # number of features to use for each feature-set
-num_features = 3
+num_features = 2
 
 for features in itertools.combinations(all_features, num_features):
 
@@ -39,7 +39,8 @@ for features in itertools.combinations(all_features, num_features):
         exp.generateResults(['cluster'], cvMethod='kfolds', k=2)
         for result in exp.results:
             r = result.getResults()
-            row = [k, r['r2'], ', '.join(f), 'mixed']
+            row = [k, float(r['r2']), float(r['MAE']), float(r['accuracy']),
+                   ', '.join(f), 'mixed']
             values.append(row)
 
         # cluster features individually
@@ -51,17 +52,22 @@ for features in itertools.combinations(all_features, num_features):
         exp = sdsm.Experiment(data=data)
         exp.clear()
         exp.addModel(sdsm.Hmm({'states': [1, 2, 3, 4, 5]}))
-        exp.generateResults(clustered_names, cvMethod='kfolds', k=2)
+        exp.generateResults(clustered_names, cvMethod='kfolds', k=3)
         for result in exp.results:
             r = result.getResults()
-            row = [k, r['r2'], ', '.join(f), 'individual']
+            row = [k, float(r['r2']), float(r['MAE']), float(r['accuracy']),
+                   ', '.join(f), 'individual']
             values.append(row)
 
 
 # plot results
 
-df = pd.DataFrame(values, columns=['k', 'r2', 'features', 'clusters'])
-print(df.sort(['r2']))
+pd.set_option('display.precision', 4)
+pd.set_option('display.width', 1024)
+pd.set_option('display.max_rows', 512)
+
+df = pd.DataFrame(values, columns=['k', 'r2', 'MAE', 'accuracy', 'features', 'clusters'])
+print(df.sort(['r2'], ascending=False))
 
 grid = sns.FacetGrid(df, row="clusters", col="features", margin_titles=True)
 grid.map(plt.scatter, "k", "r2")

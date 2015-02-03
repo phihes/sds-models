@@ -5,9 +5,11 @@ class Experiment:
     data = False
     models = []
     results = []
+    verbose = False
 
-    def __init__(self, pathToData=None, data=None):
+    def __init__(self, pathToData=None, data=None, verbose=False):
         self.clear()
+        self.verbose = verbose
         if isinstance(pathToData, basestring):
             self.data = pd.read_csv(pathToData)
             # clear of unrated turns
@@ -25,10 +27,12 @@ class Experiment:
         for model in self.models:
             model.setFeatures(features)
             if cvMethod == 'loo':
-                print "running leave-one-out cross-validation"
+                if self.verbose:
+                    print "running leave-one-out cross-validation"
                 result = model.loocv(self.getLabeledData(features))
             else:
-                print "running " + str(k) + "-fold cross-validation"
+                if self.verbose:
+                    print "running " + str(k) + "-fold cross-validation"
                 result = model.kfoldscv(self.getLabeledData(features), k)
             self.results.append(result)
 

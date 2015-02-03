@@ -32,8 +32,8 @@ for num_features in xrange(1, len(all_features)):
         f = list(features)
         print(f)
 
-        # k-means clustering for k=2..10
-        for k in xrange(2, 11):
+        # k-means clustering for k=4..12
+        for k in xrange(4, 13):
 
             print("\tk=" + str(k))
 

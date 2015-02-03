@@ -3,6 +3,18 @@ import pandas as pd
 import sdsModels as sdsm
 
 
+"""
+sequences format: (two sequences A, B with two observations each)
+[
+    (label A, rating, feature1, feature2, ...),   # observation A 1
+    (label A, rating, feature1, feature2, ...)    # observation A 2
+
+    (label B, rating, feature1, feature2, ...)    # observation B 1
+    (label B, rating, feature1, feature2, ...)    # observation B 2
+]
+"""
+# format:
+# (label, rating, feature1, feature2
 sequences = [
     [
         # Four sequences. State 1 always emits 1. State 2 always emits 2.
@@ -160,15 +172,18 @@ sequences = [
     ]
 ]
 
-for seq in sequences:
-    num_features = len(seq[0]) - 2
-    head = ["label", "rating"]
-    feats = []
-    for f in xrange(0, num_features):
-        feats.append(str(f))
-    data = pd.DataFrame(seq, columns=head + feats)
-    exp = sdsm.Experiment(data=data)
-    states = data["rating"].unique()
-    exp.addModel(sdsm.Hmm({'states': states}, verbose=True))
-    exp.generateResults(feats, cvMethod="loo")
-    exp.printResults(['model', 'accuracy', 'r2'])
+cvMethods = ['loo', 'kfolds']
+
+for cv in cvMethods:
+    for seq in sequences:
+        num_features = len(seq[0]) - 2
+        head = ["label", "rating"]
+        feats = []
+        for f in xrange(0, num_features):
+            feats.append(str(f))
+        data = pd.DataFrame(seq, columns=head + feats)
+        exp = sdsm.Experiment(data=data)
+        states = data["rating"].unique()
+        exp.addModel(sdsm.Hmm({'states': states}, verbose=True))
+        exp.generateResults(feats, cvMethod=cv, k=2)
+        exp.printResults(['model', 'accuracy', 'r2'])
