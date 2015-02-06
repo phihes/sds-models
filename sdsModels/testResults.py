@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from sklearn.metrics import *
+from itertools import chain
 
 
 class TestResults:
@@ -21,15 +22,17 @@ class TestResults:
     _results = {}
     _true = list()
     _pred = list()
+    _limits = list()
     _name = False
 
     def __init__(self, name, indicators=False, verbose=False):
         self._name = name
         self._true = list()
         self._pred = list()
+        self._limits = list()
         self._results = dict()
         self.verbose = verbose
-        if (indicators):
+        if indicators:
             self._indicators = indicators
         for i in self._indicators.keys():
             self._results[i] = list()
@@ -43,12 +46,18 @@ class TestResults:
             print "[pred]\t" + str(pred)
         self._true.append(true)
         self._pred.append(pred)
+        lim = [0] * len(true)
+        lim[0] = 1
+        self._limits.append(lim)
         for ind in self._indicators.keys():
             i = getattr(self, '_' + ind)
             self._results[ind].append(i(true, pred))
         self._compare_last(true, pred)
 
     def asLists(self):
+        """
+
+
         true = list()
         pred = list()
         for t in self._true:
@@ -58,6 +67,12 @@ class TestResults:
             pred = pred + p
 
         return true, pred
+
+        """
+        return list(chain(*self._true)), list(chain(*self._pred))
+
+    def getLimits(self):
+        return list(chain(*self._limits))
 
 
     def _compare_last(self, true, pred):
@@ -85,7 +100,7 @@ class TestResults:
         hits = 0
         count = 0
         for i in range(0, len(true)):
-            if (true[i] == pred[i]):
+            if true[i] == pred[i]:
                 hits += 1
             count += 1
         return hits, count
@@ -204,6 +219,16 @@ class TestResults:
 
         for i in self._finalInd:
             iMap[i] = str(getattr(self, '_' + i)())
+
+        if self.verbose:
+            print(self._name + ": complete truth vs. prediction")
+            true, pred = self.asLists()
+            print("true")
+            print(true)
+            print("pred")
+            print(pred)
+            print("limits")
+            print(self.getLimits())
 
         return iMap
 

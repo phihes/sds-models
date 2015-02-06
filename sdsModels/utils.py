@@ -2,6 +2,16 @@ import numpy as np
 from scipy.cluster.vq import whiten, kmeans, vq
 
 
+def printDictProbDist(dist):
+    for sample in dist.samples():
+        print(str(sample) + ": " + str(dist.prob(sample)))
+
+def printCondDictProbDist(dist):
+    for c in dist.conditions():
+        print("probs for " + str(c))
+        printDictProbDist(dist[c])
+
+
 def dfToSequences(data, params, rated=False):
     data = data.groupby(['label'])
     seqs = list()

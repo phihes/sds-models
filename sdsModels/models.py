@@ -2,7 +2,7 @@ import sklearn.cross_validation as cv
 import sklearn.dummy as dummy
 from sklearn.mixture import GMM
 from sklearn.hmm import GMMHMM
-from sklearn import linear_model
+from sklearn import linear_model, naive_bayes
 import collections
 import itertools
 import pandas as pd
@@ -215,6 +215,40 @@ class Ols(Model):
 
         return model
 
+class GaussianNaiveBayes(Model):
+    """ Gaussian Naive Bayes... """
+
+    _name = "G-NB"
+    isSklearn = True
+
+    def _train(self, data):
+        features = self.params['features']
+
+        X = np.array(zip(*[data[f].values for f in features]))
+        y = np.array(data['rating'])
+        model = naive_bayes.GaussianNB()
+        model.fit(X, y)
+
+        return model
+
+class MultinomialNaiveBayes(Model):
+    """ Multinomial Naive Bayes... """
+
+    _name = "M-NB"
+    isSklearn = True
+
+    def _train(self, data):
+        features = self.params['features']
+
+        X = np.array(zip(*[data[f].values for f in features]))
+        y = np.array(data['rating'])
+        model = naive_bayes.MultinomialNB(alpha=self.params['alpha'],
+                                          fit_prior=self.params['fit_prior'])
+        model.fit(X, y)
+
+        return model
+
+
 
 class Hmm(Model):
     """A hidden Markov model, using the Nltk implementation and maximum-
@@ -244,7 +278,7 @@ class Hmm(Model):
         states = self.params['states']
 
         # calculate maximum-likelihood parameter estimates
-        mle = Hmm.mle_multipleFeatures(NltkCounter, data, states, features)
+        mle = Hmm.mle_multipleFeatures(NltkCounter, data, states, features, self.verbose)
 
         # create nltk HMM
         model = Hmm.NltkWrapper(states, mle)
@@ -261,7 +295,7 @@ class Hmm(Model):
         f = feature is not False
         states = utils.dfToSequences(data, ['rating'])
 
-        if (f):
+        if f:
             emissionAlphabet = pd.unique(data[feature].values.ravel())
             emissions = utils.dfToSequences(data, [feature])
         else:
@@ -271,11 +305,11 @@ class Hmm(Model):
 
         # count for each state sequence
         for k, seq in enumerate(states):
-            if (f): emi = emissions[k]
+            if f: emi = emissions[k]
             # for each state transition
             for i, current in enumerate(seq):
                 # count(current, next, first, emission)
-                if (f):
+                if f:
                     emission = emi[i]
                 else:
                     emission = False
@@ -290,7 +324,7 @@ class Hmm(Model):
         )
 
     @staticmethod
-    def mle_multipleFeatures(counterClass, data, stateAlphabet, features):
+    def mle_multipleFeatures(counterClass, data, stateAlphabet, features, verbose=False):
         """ Calculate maximum likelihood estimates of HMM parameters.
         Parameters are transition probabilites, emission probabilites and
         initial sta<te probabilites.
@@ -328,6 +362,14 @@ class Hmm(Model):
                 for emission, featNum in zip(comb, xrange(0, len(emission_probs))):
                     prob = emission_probs[featNum][state][emission]
                     counter.addCombinedEmissionProb(state, tuple(comb), prob)
+
+        if verbose:
+            print("Initial Probabilities")
+            printDictProbDist(initial_probs)
+            print("Transition Probabilities")
+            printCondDictProbDist(transition_probs)
+            print("Emission Probabilities")
+            printCondDictProbDist(counter.getCombinedEmissionProb())
 
         return Hmm.Parameters(
             initial=initial_probs,
