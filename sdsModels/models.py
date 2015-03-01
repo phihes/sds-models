@@ -215,6 +215,21 @@ class Ols(Model):
 
         return model
 
+class LogisticRegression(Model):
+    """ Logistic Regression """
+
+    _name = "Logit"
+    isSklearn = True
+
+    def _train(self, data):
+        features = self.params['features']
+        X = np.array(zip(*[data[f].values for f in features]))
+        y = np.array(data['rating'])
+        model = linear_model.LogisticRegression(class_weight=self.params['class_weight'])
+        model.fit(X, y)
+
+        return model
+
 class GaussianNaiveBayes(Model):
     """ Gaussian Naive Bayes... """
 
